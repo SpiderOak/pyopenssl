@@ -883,7 +883,8 @@ class X509NameTests(TestCase):
         self.assertEqual(
             a.der(),
             b('0\x1b1\x0b0\t\x06\x03U\x04\x06\x13\x02US'
-              '1\x0c0\n\x06\x03U\x04\x03\x13\x03foo'))
+              '1\x0c0\n\x06\x03U\x04\x03\x0c\x03foo'
+              ))
 
 
     def test_get_components(self):
@@ -1347,7 +1348,14 @@ WpOdIpB8KksUTCzV591Nr1wd
         time is in the past.
         """
         cert = X509()
-        cert.gmtime_adj_notAfter(-1)
+        #print ('Cert not valid after %r' % cert.get_notAfter())
+        delta = -1
+        #now = datetime.utcnow()
+        #not_after_time = now + timedelta(seconds=delta)
+        cert.gmtime_adj_notAfter(delta)
+        #print ('Adjusted cert not valid after %r' % cert.get_notAfter())
+        #print ('Expected %r' % not_after_time.strftime("%Y%m%d%H%M%SZ"))
+        #print ('Now %r' % now.strftime("%Y%m%d%H%M%SZ"))
         self.assertTrue(cert.has_expired())
 
 
@@ -1357,7 +1365,14 @@ WpOdIpB8KksUTCzV591Nr1wd
         time is in the future.
         """
         cert = X509()
-        cert.gmtime_adj_notAfter(2)
+        #print ('Cert not valid after %r' % cert.get_notAfter())
+        delta = 2
+        #now = datetime.utcnow()
+        #not_after_time = now + timedelta(seconds=delta)
+        cert.gmtime_adj_notAfter(delta)
+        #print ('Adjusted cert not valid after %r' % cert.get_notAfter())
+        #print ('Expected %r' % not_after_time.strftime("%Y%m%d%H%M%SZ"))
+        #print ('Now %r' % now.strftime("%Y%m%d%H%M%SZ"))
         self.assertFalse(cert.has_expired())
 
 
@@ -1369,7 +1384,7 @@ WpOdIpB8KksUTCzV591Nr1wd
         cert = X509()
         self.assertEqual(
             cert.digest("md5"),
-            b("A8:EB:07:F8:53:25:0A:F2:56:05:C5:A5:C4:C4:C7:15"))
+            b("6E:DB:AA:35:8C:39:8C:86:95:0E:D6:51:7E:42:FF:F4"))
 
 
     def _extcert(self, pkey, extensions):
@@ -1380,10 +1395,15 @@ WpOdIpB8KksUTCzV591Nr1wd
         when = b(datetime.now().strftime("%Y%m%d%H%M%SZ"))
         cert.set_notBefore(when)
         cert.set_notAfter(when)
-
         cert.add_extensions(extensions)
-        return load_certificate(
-            FILETYPE_PEM, dump_certificate(FILETYPE_PEM, cert))
+
+        # OpenSSL 1.0.1i+ insist on having a non-NULL signature algorithm
+        # field, so self-sign the certificate.
+        cert.sign(pkey, b("sha1WithRSAEncryption"))
+        #text = dump_certificate(FILETYPE_TEXT, cert)
+        #print ('Cert: %r' % text)
+        return load_certificate(FILETYPE_PEM, 
+            dump_certificate(FILETYPE_PEM, cert))
 
 
     def test_extension_count(self):

@@ -201,6 +201,9 @@ do {                                                                    \
     PyModule_AddIntConstant(module, "FILETYPE_ASN1", SSL_FILETYPE_ASN1);
 
     /* SSL option constants */
+#ifdef SSL_OP_SINGLE_ECDH_USE
+    PyModule_AddIntConstant(module, "OP_SINGLE_ECDH_USE", SSL_OP_SINGLE_ECDH_USE);
+#endif
     PyModule_AddIntConstant(module, "OP_SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE);
     PyModule_AddIntConstant(module, "OP_EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA);
     PyModule_AddIntConstant(module, "OP_NO_SSLv2", SSL_OP_NO_SSLv2);
@@ -211,6 +214,18 @@ do {                                                                    \
 #endif
 #ifdef SSL_OP_NO_TLSv1_2
     PyModule_AddIntConstant(module, "OP_NO_TLSv1_2", SSL_OP_NO_TLSv1_2);
+#endif
+#ifdef SSL_OP_TLSEXT_PADDING
+    PyModule_AddIntConstant(module, "OP_TLSEXT_PADDING", SSL_OP_TLSEXT_PADDING);
+#endif
+#ifdef SSL_OP_SAFARI_ECDHE_ECDSA_BUG
+    PyModule_AddIntConstant(module, "OP_SAFARI_ECDHE_ECDSA_BUG", SSL_OP_SAFARI_ECDHE_ECDSA_BUG);
+#endif
+#ifdef SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION
+    PyModule_AddIntConstant(module, "OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION", SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+#endif
+#ifdef SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+    PyModule_AddIntConstant(module, "OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION", SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
 #endif
 
     /* More SSL option constants */
@@ -302,6 +317,9 @@ do {                                                                    \
     /* SSL modes constants */
 #ifdef SSL_MODE_RELEASE_BUFFERS
     PyModule_AddIntConstant(module, "MODE_RELEASE_BUFFERS", SSL_MODE_RELEASE_BUFFERS);
+#endif
+#ifdef SSL_MODE_SEND_FALLBACK_SCSV
+    PyModule_AddIntConstant(module, "MODE_SEND_FALLBACK_SCSV", SSL_MODE_SEND_FALLBACK_SCSV);
 #endif
 
     if (!init_ssl_context(module))

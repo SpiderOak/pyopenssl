@@ -2,7 +2,18 @@
 #define crypto_MODULE
 #include "crypto.h"
 
-static X509_REVOKED * X509_REVOKED_dup(X509_REVOKED *orig) {
+#if 1 /*OPENSSL_VERSION_NUMBER < 0x10002000L*/
+
+/* Home-grown implementation of the API for OpenSSL 1.0.1 and lower.
+
+   OpenSSL 1.0.2 comes with its own implementation, but this apparently works
+   differently and causes problems with pyOpenSSL which appear to be related
+   to stack issues. We'll therefore continue to use this version for the time
+   being. See #1574.
+
+*/
+
+static X509_REVOKED * crypto_X509_REVOKED_dup(X509_REVOKED *orig) {
     X509_REVOKED *dupe = NULL;
 
     dupe = X509_REVOKED_new();
@@ -32,6 +43,13 @@ static X509_REVOKED * X509_REVOKED_dup(X509_REVOKED *orig) {
     return dupe;
 }
 
+#else
+
+/* Use the OpenSSL version for 1.0.2 and later */
+#define crypto_X509_REVOKED_dup X509_REVOKED_dup
+
+#endif
+
 static char crypto_CRL_get_revoked_doc[] = "\n\
 Return revoked portion of the CRL structure (by value\n\
 not reference).\n\
@@ -59,7 +77,7 @@ crypto_CRL_get_revoked(crypto_CRLObj *self, PyObject *args) {
 
     for (j = 0; j < num_rev; j++) {
         r = sk_X509_REVOKED_value(self->crl->crl->revoked, j);
-        r = X509_REVOKED_dup(r);
+        r = crypto_X509_REVOKED_dup(r);
         if (r == NULL ) {
             goto error;
         }
@@ -98,7 +116,7 @@ crypto_CRL_add_revoked(crypto_CRLObj *self, PyObject *args, PyObject *keywds) {
         return NULL;
     }
 
-    dup = X509_REVOKED_dup( rev_obj->revoked );
+    dup = crypto_X509_REVOKED_dup( rev_obj->revoked );
     if (dup == NULL) {
         return NULL;
     }

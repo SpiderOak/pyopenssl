@@ -15,6 +15,20 @@
 
 #include <Python.h>
 #include <pythread.h>
+
+/* Work around a bug in OpenSSL 1.0.0 and later which is caused by winsock.h
+   being included (from dtls1.h) too late by the OpenSSL header files,
+   overriding the fixes (in ossl_typ.h) for symbol clashes caused by this OS
+   header file.
+   
+   In order to have those fixes still take effect, we include winsock.h
+   here, prior to including any OpenSSL header files.
+   
+ */
+#ifdef _WIN32
+# include "winsock.h"
+#endif
+
 #include "context.h"
 #include "session.h"
 #include "connection.h"
