@@ -33,6 +33,7 @@
 
 #define SSL_MODULE
 #include "ssl.h"
+#include "openssl/engine.h"
 
 /*
  * CALLBACKS
@@ -589,6 +590,38 @@ ssl_Context_use_certificate(ssl_ContextObj *self, PyObject *args)
         return Py_None;
     }
 }
+
+
+static char ssl_Context_set_client_cert_engine_doc[] = "\n\
+Sets the engine used for processing client certificate\n\
+\n\
+@param engine: Name of the engine to use\n\
+@return: None\n\
+";
+static PyObject *
+ssl_Context_set_client_cert_engine(ssl_ContextObj *self, PyObject *args)
+{
+	char *engine_name;
+	ENGINE *cert_engine;
+	if (!PyArg_ParseTuple(args, "s:set_client_cert_engine", &engine_name))
+		return NULL;
+	cert_engine = ENGINE_by_id(engine_name);
+	if (!cert_engine){
+		ENGINE_load_builtin_engines();
+		cert_engine = ENGINE_by_id(engine_name);
+		if (!cert_engine){
+			exception_from_error_queue(ssl_Error);
+			return NULL;
+		}
+	}
+	if (!SSL_CTX_set_client_cert_engine(self->ctx, cert_engine)){
+		exception_from_error_queue(ssl_Error);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 static char ssl_Context_use_privatekey_file_doc[] = "\n\
 Load a private key from a file\n\
@@ -1218,6 +1251,7 @@ static PyMethodDef ssl_Context_methods[] = {
     ADD_METHOD(use_certificate_chain_file),
     ADD_METHOD(use_certificate_file),
     ADD_METHOD(use_certificate),
+    ADD_METHOD(set_client_cert_engine),
     ADD_METHOD(add_extra_chain_cert),
     ADD_METHOD(use_privatekey_file),
     ADD_METHOD(use_privatekey),
